@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Titre de l'onglet de la page -->
+    <title>ADM | {{ title }}</title>
+    <!-- Favicon de la page -->
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png">
+    <!-- Stylesheet local pour le style de la page -->
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Stylesheet pour DataTables, récupéré depuis cdn.net -->
+</head>
+<body>
+    <!-- Insertion du header (bandeau et menu de navigation) -->
+    {% include 'header.html' %}
+
+    <!-- Contenu de la page -->
+    <div class="dashboard_container">
+        <!-- récupération de chaque statistique et affichage dans un bloc div -->
+        <!-- les blocs sont disposés sur une grille -->
+        <div class="stats-grid">
+            {% for stat in stats %}
+                <div class="stat-block">
+                    <h2>{{ stat.title }}</h2>
+                    <p class="stat-value">{{ stat.value }}</p>
+                    <p class="stat-description">{{ stat.description }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
