@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      
+    <title>ADM | {{ title }}</title>
+    
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}" type="image/png">
+    
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
+    
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.6/css/responsive.dataTables.css" />
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</head>
+<body>
+    {% include 'header.html' %}
+
+    {% if view_type == 'table' %}
+        <table id="dataTable" class="display" width="100%">
+            <thead>
+                <tr>
+                    {% for header in headers %}
+                        <th>{{ header }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% if query_type == 'world' %}
+                    {% for year, population_H, population_F, population_totale in data %}
+                        <tr>
+                            <td>{{ year }}</td>
+                            <td>{{ "{:,.0f}".format(population_H).replace(',','') }}</td>
+                            <td>{{ "{:,.0f}".format(population_F).replace(',','') }}</td>
+                            <td>{{ "{:,.0f}".format(population_totale).replace(',','') }}</td>
+                        </tr>
+                    {% endfor %}
+
+                {% elif query_type == 'continent' %}
+                    {% for continent, year, population in data %}
+                        <tr>
+                            <td>{{ continent }}</td>
+                            <td>{{ year }}</td>
+                            <td>{{ "{:,.0f}".format(population).replace(',','') }}</td>
+                        </tr>
+                    {% endfor %}
+
+                {% elif query_type == 'region' %}
+                    {% for region, year, population in data %}
+                        <tr>
+                            <td>{{ region }}</td>
+                            <td>{{ year }}</td>
+                            <td>{{ "{:,.0f}".format(population).replace(',','') }}</td>
+                        </tr>
+                    {% endfor %}
+
+                {% elif query_type == 'top10' %}
+                    {% for year, country, subregion, region, continent, population in data %}
+                        <tr>
+                            <td>{{ year }}</td>
+                            <td>{{ country }}</td>
+                            <td>{{ subregion }}</td>
+                            <td>{{ region }}</td>
+                            <td>{{ continent }}</td>
+                            <td>{{ "{:,.0f}".format(population).replace(',','') }}</td>
+                        </tr>
+                    {% endfor %}
+
+                {% elif query_type == 'europe' %}
+                    {% for year, country, population, density in data %}
+                        <tr>
+                            <td>{{ year }}</td>
+                            <td>{{ country }}</td>
+                            <td>{{ "{:,.0f}".format(population).replace(',','') }}</td>
+                            <td>{{ "{:,.2f}".format(density).replace(',','').replace('.',',') }}</td>
+                        </tr>
+                    {% endfor %}
+
+                {% elif query_type == 'sex_ratio' %}
+                    {% for year, male, female, ratio in data %}
+                        <tr>
+                            <td>{{ year }}</td>
+                            <td>{{ "{:,.0f}".format(male).replace(',','') }}</td>
+                            <td>{{ "{:,.0f}".format(female).replace(',','') }}</td>
+                            <td>{{ ratio }}</td>
+                        </tr>
+                    {% endfor %}
+
+                {% elif query_type == 'share' %}
+                    {% for region, country, year, pop_pays, pop_region, share in data %}
+                        <tr>
+                            <td>{{ region }}</td>
+                            <td>{{ country }}</td>
+                            <td>{{ year }}</td>
+                            <td>{{ "{:,.0f}".format(pop_pays).replace(',','') }}</td>
+                            <td>{{ "{:,.0f}".format(pop_region).replace(',','') }}</td>
+                            <td>{{ share }} %</td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+
+    {% elif view_type == 'graph' and plot_html %}
+        <div class="plot-container">
+            {{ plot_html | safe }}
+        </div>
+
+    {% elif (view_type == 'pop_map' or view_type == 'dens_map') and plot_html %}
+        <div class="map-container">
+            {{ plot_html | safe }}
+        </div>
+
+    {% elif query_type == 'about' %}
+        <div class="about-container">
+            <table id="aboutTable" class="display">
+                <tbody>
+                    {% for item in data %}
+                        <tr>
+                            <td><strong>{{ item[0] }}</strong></td>
+                            <td>{{ item[1]|safe }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.2.6/js/dataTables.responsive.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            $('#dataTable').DataTable({
+                language: {
+                    url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/fr-FR.json"
+                },
+                responsive: true,
+                paging: true,
+                order: [[0, 'desc']], 
+                initComplete: function () {
+                    this.api().columns().every( function () {
+                        var column = this;
+                        var headerText = $(column.header()).text().trim();
+
+                        // Modification ici : Ajout de "Région" avec l'accent
+                        if (headerText.includes("Année") || headerText.includes("Annee") || 
+                            headerText.includes("Continent") || headerText.includes("Pays") || 
+                            headerText.includes("Région")) {
+                            
+                            var label = "Tout";
+                            if (headerText.includes("Année") || headerText.includes("Annee")) label = "Toutes les années";
+                            else if (headerText.includes("Continent")) label = "Tous les continents";
+                            else if (headerText.includes("Pays")) label = "Tous les pays";
+                            else if (headerText.includes("Région")) label = "Toutes les régions";
+
+                            var select = $('<select style="margin-left:10px; padding:2px; border-radius:4px; border:1px solid #ccc;"><option value="">' + label + '</option></select>')
+                                .appendTo( $(column.header()) )
+                                .on( 'change', function () {
+                                    var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                                    column.search( val ? '^'+val+'$' : '', true, false ).draw();
+                                });
+
+                            column.data().unique().sort().each( function ( d, j ) {
+                                var cleanData = d.toString().replace(/<\/?[^>]+(>|$)/g, "");
+                                select.append( '<option value="'+cleanData+'">'+cleanData+'</option>' )
+                            });
+
+                            $(select).click(function(e) {
+                                e.stopPropagation();
+                            });
+                        }
+                    });
+                }
+            });
+            
+            $('#aboutTable').DataTable({
+                paging: false,
+                searching: false,
+                info: false,
+                ordering: false
+            });
+        });
+    </script>
+</body>
+</html>

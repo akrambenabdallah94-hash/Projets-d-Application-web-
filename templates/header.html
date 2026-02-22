@@ -1,0 +1,41 @@
+<header>  
+    <h1>
+        <img id="worldmap" src="{{ url_for('static', filename='images/favicon.png') }}" style="width:40px; vertical-align:middle; margin-right:15px;"/>
+        <b>Analyse démographique mondiale</b> &nbsp;|&nbsp; {{ title }}
+    </h1>
+
+    <div class="menu">
+        <a href="/?query=world&view=table" {% if query_type == 'world' %} class="active"{% endif %}>Population mondiale</a>
+        <a href="/?query=continent&view=table" {% if query_type == 'continent' %} class="active"{% endif %}>Population par Continent</a>
+        
+        <a href="/?query=sex_ratio&view=table" {% if query_type == 'sex_ratio' %} class="active"{% endif %}>Ratio H/F</a>
+        
+        <a href="/?query=region&view=table" {% if query_type == 'region' %} class="active"{% endif %}>Population par région</a>
+        <a href="/?query=share&view=table" {% if query_type == 'share' %} class="active"{% endif %}>Part par pays/région</a>
+        
+        <a href="/?query=top10&view=table" {% if query_type == 'top10' %} class="active"{% endif %}>Top 10 des pays par année</a>
+        <a href="/?query=europe&view=table" {% if query_type == 'europe' %} class="active"{% endif %}>Démographie européenne</a>
+        <a href="/dashboard" {% if request.path == '/dashboard' %}class="active"{% endif %}>Indicateurs clés</a>
+        <a id="about" href="/?query=about&view=text" {% if query_type == 'about' %}class="active"{% endif %}>à propos...</a>
+    </div>
+
+    {% if query_type in ['world', 'continent', 'region', 'top10', 'europe', 'sex_ratio', 'share'] %}
+        <div class="submenu">
+            <a href="/?query={{ query_type }}&view=table" {% if view_type == 'table' %}class="active"{% endif %}>Tableau</a>
+            
+            {% if query_type != 'europe' %}
+                <a href="/?query={{ query_type }}&view=graph" {% if view_type == 'graph' %}class="active"{% endif %}>Graphe</a>
+            {% else %}
+                <a href="/?query={{ query_type }}&view=dens_map" {% if view_type == 'dens_map' %}class="active"{% endif %}>Carte densité 2023</a>    
+            {% endif %}
+
+            <a href="/download_csv?query={{ query_type }}" style="background-color: #28a745; color: white; border-radius: 4px; padding: 5px 10px; margin-left: 15px; text-decoration: none; display: inline-block;">
+                 Télécharger CSV
+            </a>
+
+            <a href="/download_excel?query={{ query_type }}" style="background-color: #1d6f42; color: white; border-radius: 4px; padding: 5px 10px; margin-left: 10px; text-decoration: none; display: inline-block;">
+                 Télécharger Excel
+            </a>
+        </div>
+    {% endif %}
+</header>
